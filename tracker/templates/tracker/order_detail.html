@@ -750,7 +750,7 @@
           {% endif %}
         </div>
         <div class="card-body" style="background-color: #f0f8ff;">
-          {% if order.components.exists or order.invoice_links.exists %}
+          {% if order.components.exists %}
           <div class="components-and-invoices-list">
             <!-- Order Components -->
             {% if order.components.exists %}
