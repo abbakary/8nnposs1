@@ -492,6 +492,30 @@ def started_order_detail(request, order_id):
     
     active_tab = request.GET.get('tab', 'overview')
 
+    # Check if order exceeds 9+ working hours
+    exceeds_9_hours = False
+    if order.started_at:
+        try:
+            from .utils.time_utils import is_order_overdue
+            exceeds_9_hours = is_order_overdue(order.started_at) if order.status == 'in_progress' else (
+                order.actual_duration and order.actual_duration >= (9 * 60)  # 9 hours in minutes
+            )
+        except Exception:
+            exceeds_9_hours = False
+
+    # Fetch delay reason categories and reasons for template rendering
+    delay_reasons_by_category = {}
+    try:
+        from .models import DelayReasonCategory, DelayReason
+        for category in DelayReasonCategory.objects.filter(is_active=True):
+            reasons = list(DelayReason.objects.filter(category=category, is_active=True).values('id', 'reason_text'))
+            delay_reasons_by_category[category.category] = reasons
+        # Convert to JSON string for template
+        import json
+        delay_reasons_for_template = json.dumps(delay_reasons_by_category)
+    except Exception:
+        delay_reasons_for_template = delay_reasons_by_category
+
     context = {
         'order': order,
         'customer': order.customer,
@@ -501,8 +525,11 @@ def started_order_detail(request, order_id):
         'branch_mismatch': branch_mismatch,
         'user_branch': user_branch,
         'is_admin': is_admin,
+        'exceeds_9_hours': exceeds_9_hours,
+        'delay_reason_categories': [],
+        'delay_reasons_by_category': delay_reasons_for_template,
     }
-    
+
     return render(request, 'tracker/started_order_detail.html', context)
 
 
