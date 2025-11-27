@@ -1586,23 +1586,14 @@
       const selectedReason = delayReasonDropdown.value;
       if (!selectedReason) {
         e.preventDefault();
-        alert('Please select a delay reason before completing this order.');
+        e.stopPropagation();
+        alert('Please select a delay reason before completing this order. This order exceeded 9 working hours.');
+        // Switch to details tab to show the delay reason field
+        const detailsTab = document.getElementById('detailsTab');
+        if (detailsTab) detailsTab.click();
         return false;
       }
-    });
-  }
-
-  // Also validate when clicking footer button
-  if (footerSignAndComplete && exceeds9Hours) {
-    const originalListener = footerSignAndComplete.onclick;
-    footerSignAndComplete.addEventListener('click', function(e) {
-      const selectedReason = delayReasonDropdown.value;
-      if (!selectedReason) {
-        e.preventDefault();
-        alert('Please select a delay reason before completing this order.');
-        return false;
-      }
-    });
+    }, true); // Use capture phase to ensure this runs before form submission
   }
 
   // Initialize UI on page load
