@@ -5800,48 +5800,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Calculate aggregated totals for multiple invoices
-  function calculateAggregatedTotals() {
-    let totalNet = 0;
-    let totalTax = 0;
-    let totalGross = 0;
-
-    // Add primary invoice amounts
-    {% if invoice %}
-    totalNet += parseFloat('{{ invoice.subtotal }}') || 0;
-    totalTax += parseFloat('{{ invoice.tax_amount }}') || 0;
-    totalGross += parseFloat('{{ invoice.total_amount }}') || 0;
-    {% endif %}
-
-    // Add all linked invoices amounts
-    {% for link in order.invoice_links.all %}
-    totalNet += parseFloat('{{ link.invoice.subtotal }}') || 0;
-    totalTax += parseFloat('{{ link.invoice.tax_amount }}') || 0;
-    totalGross += parseFloat('{{ link.invoice.total_amount }}') || 0;
-    {% endfor %}
-
-    // Format and display totals
-    const formatter = new Intl.NumberFormat('en-US', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-
-    const netEl = document.getElementById('aggregatedNetAmount');
-    const taxEl = document.getElementById('aggregatedTaxAmount');
-    const grossEl = document.getElementById('aggregatedGrossAmount');
-
-    if (netEl) netEl.textContent = formatter.format(totalNet);
-    if (taxEl) taxEl.textContent = formatter.format(totalTax);
-    if (grossEl) grossEl.textContent = formatter.format(totalGross);
-  }
-
-  // Call on page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', calculateAggregatedTotals);
-  } else {
-    calculateAggregatedTotals();
-  }
-
 })();
 </script>
 {% endblock %}
