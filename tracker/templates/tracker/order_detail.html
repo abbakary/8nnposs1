@@ -5098,16 +5098,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // Validate reason field
-      const reasonField = document.getElementById('additionalInvoiceReason');
-      if (!reasonField || !reasonField.value.trim()) {
-        additionalErrorBox.style.display = 'block';
-        additionalErrorBox.innerHTML = '<i class="fa fa-warning me-2"></i>Please provide a reason for adding this invoice.';
-        additionalErrorBox.className = 'alert alert-warning';
-        reasonField?.focus();
-        return;
-      }
-
       addAdditionalInvoiceBtn.disabled = true;
       const originalBtnText = addAdditionalInvoiceBtn.innerHTML;
       addAdditionalInvoiceBtn.innerHTML = '<i class="fa fa-spinner fa-spin me-2"></i>Adding...';
