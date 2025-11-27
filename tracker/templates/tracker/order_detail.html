@@ -1378,10 +1378,12 @@
 
   // Initialize when the signature/completion modal opens
   const completionModalEl = document.getElementById('completeModal');
-  if (completionModalEl && delayReasonCategory) {
+  if (completionModalEl) {
     completionModalEl.addEventListener('shown.bs.modal', function() {
       // Re-initialize delay reason fields when modal is shown
-      initializeDelayReasonFields();
+      if (typeof initializeDelayReasonFields === 'function') {
+        initializeDelayReasonFields();
+      }
     });
   }
 
