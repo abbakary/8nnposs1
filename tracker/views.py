@@ -3577,40 +3577,40 @@ def complete_order(request: HttpRequest, pk: int):
                 messages.error(request, 'Order has exceeded 9 working hours. Please select a delay reason before completing.')
                 return redirect('tracker:order_detail', pk=o.id)
 
-    # Persist optional delay reason even when not strictly exceeding 9 hours
-    try:
-        optional_delay_reason_id = request.POST.get('delay_reason')
-        if optional_delay_reason_id and not getattr(o, 'delay_reason_id', None):
-            from tracker.models import DelayReason
-            try:
-                delay_reason = DelayReason.objects.get(id=optional_delay_reason_id)
-                o.delay_reason = delay_reason
-                o.delay_reason_reported_at = timezone.now()
-                o.delay_reason_reported_by = request.user
-                o.save(update_fields=['delay_reason', 'delay_reason_reported_at', 'delay_reason_reported_by'])
-            except DelayReason.DoesNotExist:
-                pass
-        elif not getattr(o, 'delay_reason_id', None):
-            # Fallback by text + category
-            reason_text = (request.POST.get('delay_reason_text') or '').strip()
-            reason_cat = (request.POST.get('delay_reason_category') or '').strip()
-            if reason_text and reason_cat:
+    # Persist optional delay reason even when not strictly exceeding 9 hours (for orders not exceeding 9 hours)
+    if not exceeds_9_hours:
+        try:
+            optional_delay_reason_id = request.POST.get('delay_reason')
+            if optional_delay_reason_id and not getattr(o, 'delay_reason_id', None):
+                from tracker.models import DelayReason
                 try:
-                    from tracker.models import DelayReason, DelayReasonCategory
-                    cat_obj = DelayReasonCategory.objects.filter(category=reason_cat, is_active=True).first()
-                    if cat_obj:
-                        dr = DelayReason.objects.filter(category=cat_obj, reason_text__iexact=reason_text).first()
-                        if not dr:
-                            # Create a new reason so it can be referenced later
-                            dr = DelayReason.objects.create(category=cat_obj, reason_text=reason_text, is_active=True)
-                        o.delay_reason = dr
-                        o.delay_reason_reported_at = timezone.now()
-                        o.delay_reason_reported_by = request.user
-                        o.save(update_fields=['delay_reason', 'delay_reason_reported_at', 'delay_reason_reported_by'])
-                except Exception:
-                    pass
-    except Exception:
-        pass
+                    delay_reason = DelayReason.objects.get(id=optional_delay_reason_id)
+                    o.delay_reason = delay_reason
+                    o.delay_reason_reported_at = timezone.now()
+                    o.delay_reason_reported_by = request.user
+                    o.save(update_fields=['delay_reason', 'delay_reason_reported_at', 'delay_reason_reported_by'])
+                except DelayReason.DoesNotExist:
+                    logger.warning(f"Optional delay reason ID {optional_delay_reason_id} not found for order {o.id}")
+            elif not getattr(o, 'delay_reason_id', None):
+                # Fallback by text + category
+                reason_text = (request.POST.get('delay_reason_text') or '').strip()
+                reason_cat = (request.POST.get('delay_reason_category') or '').strip()
+                if reason_text and reason_cat:
+                    try:
+                        from tracker.models import DelayReason, DelayReasonCategory
+                        cat_obj = DelayReasonCategory.objects.filter(category=reason_cat, is_active=True).first()
+                        if cat_obj:
+                            dr = DelayReason.objects.filter(category=cat_obj, reason_text__iexact=reason_text).first()
+                            if not dr:
+                                dr = DelayReason.objects.create(category=cat_obj, reason_text=reason_text, is_active=True)
+                            o.delay_reason = dr
+                            o.delay_reason_reported_at = timezone.now()
+                            o.delay_reason_reported_by = request.user
+                            o.save(update_fields=['delay_reason', 'delay_reason_reported_at', 'delay_reason_reported_by'])
+                    except Exception as e:
+                        logger.warning(f"Error saving optional delay reason for order {o.id}: {str(e)}")
+        except Exception as e:
+            logger.warning(f"Error handling optional delay reason for order {o.id}: {str(e)}")
 
     # Persist optional free-text comments from the modal into overrun_reason
     try:
