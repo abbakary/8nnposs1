@@ -5971,24 +5971,15 @@ document.addEventListener('DOMContentLoaded', function() {
           `;
           document.querySelector('.modal-body').insertBefore(successAlert, document.querySelector('.card'));
 
-          // Close modal after a delay and dynamically add invoice to UI
+          // Close modal after a delay and reload page to show updated invoice
           setTimeout(() => {
             const modal = bootstrap.Modal.getInstance(document.getElementById('uploadAdditionalInvoiceModal'));
             modal?.hide();
 
-            // Dynamically add the new invoice to the additional invoices section
-            addInvoiceToPage(data.invoice_id, data.invoice_number, data);
+            // Reload page to show the newly added invoice
+            location.reload();
 
-            // Reset form for next upload
-            form.reset();
-            fileInput.disabled = false;
-            submitBtn.disabled = true;
-            previewSection.style.display = 'none';
-            uploadSuccess.style.display = 'none';
-            uploadError.style.display = 'none';
-            form.dataset.submitting = 'false';
-
-          }, 1500);
+          }, 2000);
         } else {
           uploadError.textContent = data.message || 'Failed to create invoice';
           uploadError.style.display = 'block';
